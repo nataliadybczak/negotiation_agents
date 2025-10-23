@@ -2,44 +2,44 @@
     "Move-Behavior1": {
         "checkpoints": [
             {
-                "steps": 6199,
-                "file_path": "results\\ppo\\Move-Behavior1\\Move-Behavior1-6199.onnx",
+                "steps": 2250,
+                "file_path": "results\\ppo\\Move-Behavior1\\Move-Behavior1-2250.onnx",
                 "reward": 0.0,
-                "creation_time": 1760728711.2059317,
+                "creation_time": 1761210556.7463195,
                 "auxillary_file_paths": [
-                    "results\\ppo\\Move-Behavior1\\Move-Behavior1-6199.pt"
+                    "results\\ppo\\Move-Behavior1\\Move-Behavior1-2250.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 6199,
+            "steps": 2250,
             "file_path": "results\\ppo\\Move-Behavior1.onnx",
             "reward": 0.0,
-            "creation_time": 1760728711.2059317,
+            "creation_time": 1761210556.7463195,
             "auxillary_file_paths": [
-                "results\\ppo\\Move-Behavior1\\Move-Behavior1-6199.pt"
+                "results\\ppo\\Move-Behavior1\\Move-Behavior1-2250.pt"
             ]
         }
     },
     "Move Behavior3": {
         "checkpoints": [
             {
-                "steps": 6199,
-                "file_path": "results\\ppo\\Move Behavior3\\Move Behavior3-6199.onnx",
+                "steps": 2250,
+                "file_path": "results\\ppo\\Move Behavior3\\Move Behavior3-2250.onnx",
                 "reward": 0.0,
-                "creation_time": 1760728711.2650692,
+                "creation_time": 1761210556.8185937,
                 "auxillary_file_paths": [
-                    "results\\ppo\\Move Behavior3\\Move Behavior3-6199.pt"
+                    "results\\ppo\\Move Behavior3\\Move Behavior3-2250.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 6199,
+            "steps": 2250,
             "file_path": "results\\ppo\\Move Behavior3.onnx",
             "reward": 0.0,
-            "creation_time": 1760728711.2650692,
+            "creation_time": 1761210556.8185937,
             "auxillary_file_paths": [
-                "results\\ppo\\Move Behavior3\\Move Behavior3-6199.pt"
+                "results\\ppo\\Move Behavior3\\Move Behavior3-2250.pt"
             ]
         }
     },
