@@ -1,45 +1,32 @@
 {
-    "Move-Behavior1": {
+    "NegoAgent": {
         "checkpoints": [
             {
-                "steps": 2250,
-                "file_path": "results\\ppo\\Move-Behavior1\\Move-Behavior1-2250.onnx",
-                "reward": 0.0,
-                "creation_time": 1761210556.7463195,
+                "steps": 499950,
+                "file_path": "results\\ppo\\NegoAgent\\NegoAgent-499950.onnx",
+                "reward": -2.197344682519398,
+                "creation_time": 1761215056.6390457,
                 "auxillary_file_paths": [
-                    "results\\ppo\\Move-Behavior1\\Move-Behavior1-2250.pt"
+                    "results\\ppo\\NegoAgent\\NegoAgent-499950.pt"
+                ]
+            },
+            {
+                "steps": 500100,
+                "file_path": "results\\ppo\\NegoAgent\\NegoAgent-500100.onnx",
+                "reward": -2.1762015828580568,
+                "creation_time": 1761215056.7211695,
+                "auxillary_file_paths": [
+                    "results\\ppo\\NegoAgent\\NegoAgent-500100.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 2250,
-            "file_path": "results\\ppo\\Move-Behavior1.onnx",
-            "reward": 0.0,
-            "creation_time": 1761210556.7463195,
+            "steps": 500100,
+            "file_path": "results\\ppo\\NegoAgent.onnx",
+            "reward": -2.1762015828580568,
+            "creation_time": 1761215056.7211695,
             "auxillary_file_paths": [
-                "results\\ppo\\Move-Behavior1\\Move-Behavior1-2250.pt"
-            ]
-        }
-    },
-    "Move Behavior3": {
-        "checkpoints": [
-            {
-                "steps": 2250,
-                "file_path": "results\\ppo\\Move Behavior3\\Move Behavior3-2250.onnx",
-                "reward": 0.0,
-                "creation_time": 1761210556.8185937,
-                "auxillary_file_paths": [
-                    "results\\ppo\\Move Behavior3\\Move Behavior3-2250.pt"
-                ]
-            }
-        ],
-        "final_checkpoint": {
-            "steps": 2250,
-            "file_path": "results\\ppo\\Move Behavior3.onnx",
-            "reward": 0.0,
-            "creation_time": 1761210556.8185937,
-            "auxillary_file_paths": [
-                "results\\ppo\\Move Behavior3\\Move Behavior3-2250.pt"
+                "results\\ppo\\NegoAgent\\NegoAgent-500100.pt"
             ]
         }
     },

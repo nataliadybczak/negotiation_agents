@@ -5,6 +5,7 @@ using Unity.MLAgents.Sensors;
 using TMPro;
 using System.Collections.Generic;
 
+
 public class NegotiationAgent : Agent
 {
     private Rigidbody rb;
@@ -18,6 +19,9 @@ public class NegotiationAgent : Agent
     public NegotiationAgent agent3;
     private List<NegotiationAgent> otherAgents;
     private enum TradeType {FoodForEnergy, EnergyForFood};
+    [Tooltip("Pokazuje bieżącą, nieskalowaną karę. Cel to 0.")]
+    public float currentImbalanceDebug;
+
 
 
     public override void Initialize()
@@ -25,7 +29,7 @@ public class NegotiationAgent : Agent
         rb = GetComponent<Rigidbody>();
 
         //Szukamy innych agentów
-        if (agent2 != null || agent3 != null)
+        if (agent2 != null && agent3 != null)
         {
             otherAgents = new List<NegotiationAgent> {agent2, agent3};
         }
@@ -101,9 +105,9 @@ public class NegotiationAgent : Agent
         sensor.AddObservation(agent3.food);
         sensor.AddObservation(agent3.energy);
 
-        Debug.Log($"Agent {gameObject.name} obserwuje: Self({food:F1}, {energy:F1}), " +
-                  $"A2({agent2.food:F1}, {agent2.energy:F1}), " +
-                  $"A3({agent3.food:F1}, {agent3.energy:F1})");
+        // Debug.Log($"Agent {gameObject.name} obserwuje: Self({food:F1}, {energy:F1}), " +
+        //           $"A2({agent2.food:F1}, {agent2.energy:F1}), " +
+        //           $"A3({agent3.food:F1}, {agent3.energy:F1})");
     }
 
     public override void OnEpisodeBegin()
@@ -119,6 +123,7 @@ public class NegotiationAgent : Agent
         Debug.Log($"Nowy epizod! Agent: {gameObject.name}, Food: {food}, Energy: {energy}");
 
         episodeTimer = 0f;
+        currentImbalanceDebug = -Mathf.Abs(food - energy);
     }
 
     public void Update()
@@ -131,7 +136,14 @@ public class NegotiationAgent : Agent
 
     void FixedUpdate()
     {
-        // Dodajemy czas, który upłynął od ostatniej klatki fizyki
+        float imbalance = Mathf.Abs(food - energy);
+        currentImbalanceDebug = -imbalance;
+
+        float scaledPenalty = (imbalance / 100.0f) * Time.fixedDeltaTime;
+
+        AddReward(-scaledPenalty);
+
+
         episodeTimer += Time.fixedDeltaTime;
 
         // Sprawdzamy, czy czas epizodu został przekroczony
