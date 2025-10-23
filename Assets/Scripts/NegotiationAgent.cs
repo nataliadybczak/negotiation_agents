@@ -9,7 +9,7 @@ public class NegotiationAgent : Agent
     private Rigidbody rb;
     public float moveSpeed = 10f; // Dajmy większą wartość na start
     public float food;
-    public float energy;
+    public float energy;    
     public TextMeshProUGUI statusText;
     public float maxEpisodeTime = 10f; // Ile sekund ma trwać epizod
     private float episodeTimer;        // Licznik czasu dla bieżącego epizodu
@@ -76,7 +76,7 @@ public class NegotiationAgent : Agent
     {
         if (statusText != null)
         {
-            statusText.text = $"Name: {gameObject.name}\nFood: {food.ToString("F1")}\nEnergy: {energy.ToString("F1")}";
+            statusText.text = $"Food: {food.ToString("F1")}\nEnergy: {energy.ToString("F1")}";
         }
     }
 

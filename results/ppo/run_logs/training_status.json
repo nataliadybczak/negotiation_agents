@@ -1,0 +1,51 @@
+{
+    "Move-Behavior1": {
+        "checkpoints": [
+            {
+                "steps": 6199,
+                "file_path": "results\\ppo\\Move-Behavior1\\Move-Behavior1-6199.onnx",
+                "reward": 0.0,
+                "creation_time": 1760728711.2059317,
+                "auxillary_file_paths": [
+                    "results\\ppo\\Move-Behavior1\\Move-Behavior1-6199.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 6199,
+            "file_path": "results\\ppo\\Move-Behavior1.onnx",
+            "reward": 0.0,
+            "creation_time": 1760728711.2059317,
+            "auxillary_file_paths": [
+                "results\\ppo\\Move-Behavior1\\Move-Behavior1-6199.pt"
+            ]
+        }
+    },
+    "Move Behavior3": {
+        "checkpoints": [
+            {
+                "steps": 6199,
+                "file_path": "results\\ppo\\Move Behavior3\\Move Behavior3-6199.onnx",
+                "reward": 0.0,
+                "creation_time": 1760728711.2650692,
+                "auxillary_file_paths": [
+                    "results\\ppo\\Move Behavior3\\Move Behavior3-6199.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 6199,
+            "file_path": "results\\ppo\\Move Behavior3.onnx",
+            "reward": 0.0,
+            "creation_time": 1760728711.2650692,
+            "auxillary_file_paths": [
+                "results\\ppo\\Move Behavior3\\Move Behavior3-6199.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.5.1"
+    }
+}
