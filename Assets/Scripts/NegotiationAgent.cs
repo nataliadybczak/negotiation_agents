@@ -22,6 +22,8 @@ public class NegotiationAgent : Agent
     [Tooltip("Pokazuje bieżącą, nieskalowaną karę. Cel to 0.")]
     public float currentImbalanceDebug;
 
+    public Renderer robotRenderer; //żeby je kolorowac
+
 
 
     public override void Initialize()
@@ -132,6 +134,20 @@ public class NegotiationAgent : Agent
         {
             statusText.text = $"Food: {food.ToString("F1")}\nEnergy: {energy.ToString("F1")}";
         }
+        if (robotRenderer == null) return;
+
+        Color goodBalanceColor = Color.green;
+        Color badBalanceColor = Color.red;
+
+        float maxImbalance = 100f;
+        float currentImbalance = Mathf.Abs(food - energy);
+
+        float normalizedImbalance = Mathf.Clamp01(currentImbalance / maxImbalance);
+
+        Color NewColor = Color.Lerp(goodBalanceColor, badBalanceColor, normalizedImbalance);
+
+        robotRenderer.material.color = NewColor;
+        
     }
 
     void FixedUpdate()
