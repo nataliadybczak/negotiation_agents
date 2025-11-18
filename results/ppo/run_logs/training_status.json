@@ -2,31 +2,22 @@
     "NegoAgent": {
         "checkpoints": [
             {
-                "steps": 499950,
-                "file_path": "results\\ppo\\NegoAgent\\NegoAgent-499950.onnx",
-                "reward": -2.197344682519398,
-                "creation_time": 1761215056.6390457,
+                "steps": 8400,
+                "file_path": "results\\ppo\\NegoAgent\\NegoAgent-8400.onnx",
+                "reward": -3.886769275225344,
+                "creation_time": 1763387522.692768,
                 "auxillary_file_paths": [
-                    "results\\ppo\\NegoAgent\\NegoAgent-499950.pt"
-                ]
-            },
-            {
-                "steps": 500100,
-                "file_path": "results\\ppo\\NegoAgent\\NegoAgent-500100.onnx",
-                "reward": -2.1762015828580568,
-                "creation_time": 1761215056.7211695,
-                "auxillary_file_paths": [
-                    "results\\ppo\\NegoAgent\\NegoAgent-500100.pt"
+                    "results\\ppo\\NegoAgent\\NegoAgent-8400.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 500100,
+            "steps": 8400,
             "file_path": "results\\ppo\\NegoAgent.onnx",
-            "reward": -2.1762015828580568,
-            "creation_time": 1761215056.7211695,
+            "reward": -3.886769275225344,
+            "creation_time": 1763387522.692768,
             "auxillary_file_paths": [
-                "results\\ppo\\NegoAgent\\NegoAgent-500100.pt"
+                "results\\ppo\\NegoAgent\\NegoAgent-8400.pt"
             ]
         }
     },

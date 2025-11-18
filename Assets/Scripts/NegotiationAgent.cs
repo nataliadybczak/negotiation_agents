@@ -4,6 +4,8 @@ using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using TMPro;
 using System.Collections.Generic;
+// using System;
+// using Unity.Mathematics;
 
 
 public class NegotiationAgent : Agent
@@ -45,49 +47,57 @@ public class NegotiationAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        // // Pobieramy akcje (0 lub 1) z obu gałęzi
-        // int moveXAction = actions.DiscreteActions[0];
-        // int moveZAction = actions.DiscreteActions[1];
-
-        // Vector3 controlSignal = Vector3.zero;
-
-        // // Logika dla osi X - mapujemy 0 i 1 na ruch
-        // if (moveXAction == 0)
-        // {
-        //     controlSignal.x = 1f; // Akcja 0 -> Ruch w prawo
-        // }
-        // else // moveXAction == 1
-        // {
-        //     controlSignal.x = -1f; // Akcja 1 -> Ruch w lewo
-        // }
-
-        // // Logika dla osi Z - mapujemy 0 i 1 na ruch
-        // if (moveZAction == 0)
-        // {
-        //     controlSignal.z = 1f; // Akcja 0 -> Ruch do przodu
-        // }
-        // else // moveZAction == 1
-        // {
-        //     controlSignal.z = -1f; // Akcja 1 -> Ruch do tyłu
-        // }
-
-        // Vector3 targetVelocity = controlSignal.normalized * moveSpeed;
-        // rb.velocity = targetVelocity;
-
         int tradeAction = actions.DiscreteActions[0];
-        
+
         switch (tradeAction)
         {
             case 0:  //nic ne rób
                 break;
             case 1:  //jedzenie -> energa
-                HandleTrade(TradeType.FoodForEnergy);
+                NegotiationAgent bestAgentFood = FindBestPartner(TradeType.FoodForEnergy);
+                if (bestAgentFood != null)
+                {
+                    HandleTrade(TradeType.FoodForEnergy, bestAgentFood);
+                }
                 break;
             case 2: //energia -> jedzenie
-                HandleTrade(TradeType.EnergyForFood);
+                NegotiationAgent bestAgentEnergy = FindBestPartner(TradeType.EnergyForFood);
+                if (bestAgentEnergy != null)
+                {
+                    HandleTrade(TradeType.EnergyForFood, bestAgentEnergy);
+                }
                 break;
         }
 
+    }
+    
+    private NegotiationAgent FindBestPartner(TradeType tradeType)
+    {
+        NegotiationAgent[] candidates = new NegotiationAgent[] { agent2, agent3 };
+        NegotiationAgent bestAgent = null;
+        float bestValue = Mathf.Infinity;
+
+        foreach (var candidate in candidates)
+        {
+            float candidateValue = 0f;
+
+            if (tradeType == TradeType.FoodForEnergy)
+            {
+                candidateValue = candidate.food;
+            }
+            else if (tradeType == TradeType.EnergyForFood)
+            {
+                candidateValue = candidate.energy;
+            }
+
+            if (candidateValue < bestValue)
+            {
+                bestValue = candidateValue;
+                bestAgent = candidate;
+            }
+        }
+
+        return bestAgent;
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -170,11 +180,9 @@ public class NegotiationAgent : Agent
         }
     }
 
-    private void HandleTrade(TradeType tradeType)
+    private void HandleTrade(TradeType tradeType, NegotiationAgent targetAgent)
     {
         if (otherAgents == null || otherAgents.Count == 0) return;
-
-        NegotiationAgent targetAgent = otherAgents[Random.Range(0, otherAgents.Count)];
 
         if (tradeType == TradeType.FoodForEnergy)
         {
