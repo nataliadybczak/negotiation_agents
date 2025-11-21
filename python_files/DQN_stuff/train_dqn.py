@@ -8,6 +8,7 @@ from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
+from mlagents_envs.side_channel.engine_configuration_channel import EngineConfigurationChannel
 
 # --- NOWY IMPORT: PRZEJŚCIÓWKA (BRIDGE) ---
 # To zamienia stary gym na nowy gymnasium
@@ -21,19 +22,18 @@ class UnityVectorObservationWrapper(gym.Wrapper):
     """
     def __init__(self, env):
         super().__init__(env)
-        # Bierzemy pierwszy element z definicji przestrzeni (to jest nasz Box(6,))
         self.observation_space = env.observation_space[0]
 
     def reset(self, **kwargs):
         obs = self.env.reset(**kwargs)
-        # Jeśli obs to krotka/lista, weź pierwszy element
+
         if isinstance(obs, (tuple, list)):
             return obs[0]
         return obs
 
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
-        # Jeśli obs to krotka/lista, weź pierwszy element
+
         if isinstance(obs, (tuple, list)):
             obs = obs[0]
         return obs, reward, done, info
@@ -42,7 +42,7 @@ def main():
     # --- KONFIGURACJA ŚCIEŻEK ---
     # Upewnij się, że nazwa pliku zgadza się z Twoim buildem!
     # Jeśli jesteś na Windowsie, pamiętaj o .exe
-    unity_env_path = r"D:\UnityProjects\negotiation_agents\Build\ML-Agents-Project.exe"
+    unity_env_path = r"/Build/ML-Agents-Project.exe"
 
     # Folder na zapisywanie modeli i logów
     models_dir = "models/DQN"
@@ -54,7 +54,14 @@ def main():
     print("1. Uruchamiam środowisko Unity...")
     # no_graphics=True -> przyspiesza trening (nie renderuje okna gry)
     # worker_id -> unikalne ID, pozwala uruchomić kilka treningów naraz (zostaw 1)
-    unity_env = UnityEnvironment(file_name=unity_env_path, seed=1, no_graphics=False, worker_id=1)
+
+    channel = EngineConfigurationChannel()
+
+    channel.set_configuration_parameters(width=80, height=80, quality_level=1,
+                                         time_scale=20.0, target_frame_rate=-1)
+
+    unity_env = UnityEnvironment(file_name=unity_env_path, seed=1, no_graphics=True,
+                                 worker_id=1, side_channels=[channel])
 
     print("2. Konwertuję środowisko do formatu Gym...")
     # To jest magiczna linijka, która tłumaczy Unity na język zrozumiały dla DQN

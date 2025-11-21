@@ -1,0 +1,56 @@
+{
+    "NegoAgent": {
+        "checkpoints": [
+            {
+                "steps": 49950,
+                "file_path": "results\\NegoTest_01\\NegoAgent\\NegoAgent-49950.onnx",
+                "reward": -2.402807076772054,
+                "creation_time": 1763388309.4578333,
+                "auxillary_file_paths": [
+                    "results\\NegoTest_01\\NegoAgent\\NegoAgent-49950.pt"
+                ]
+            },
+            {
+                "steps": 99950,
+                "file_path": "results\\NegoTest_01\\NegoAgent\\NegoAgent-99950.onnx",
+                "reward": -2.802259428501129,
+                "creation_time": 1763388553.512008,
+                "auxillary_file_paths": [
+                    "results\\NegoTest_01\\NegoAgent\\NegoAgent-99950.pt"
+                ]
+            },
+            {
+                "steps": 149950,
+                "file_path": "results\\NegoTest_01\\NegoAgent\\NegoAgent-149950.onnx",
+                "reward": -2.105673232499291,
+                "creation_time": 1763388787.6165235,
+                "auxillary_file_paths": [
+                    "results\\NegoTest_01\\NegoAgent\\NegoAgent-149950.pt"
+                ]
+            },
+            {
+                "steps": 194850,
+                "file_path": "results\\NegoTest_01\\NegoAgent\\NegoAgent-194850.onnx",
+                "reward": -2.495605033455473,
+                "creation_time": 1763388971.7664223,
+                "auxillary_file_paths": [
+                    "results\\NegoTest_01\\NegoAgent\\NegoAgent-194850.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 194850,
+            "file_path": "results\\NegoTest_01\\NegoAgent.onnx",
+            "reward": -2.495605033455473,
+            "creation_time": 1763388971.7664223,
+            "auxillary_file_paths": [
+                "results\\NegoTest_01\\NegoAgent\\NegoAgent-194850.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.5.1"
+    }
+}

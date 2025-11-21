@@ -1,0 +1,65 @@
+{
+    "NegoAgent": {
+        "checkpoints": [
+            {
+                "steps": 1199950,
+                "file_path": "results\\SuperNego_Training_v1\\NegoAgent\\NegoAgent-1199950.onnx",
+                "reward": -1.8743308384847992,
+                "creation_time": 1763400725.9496663,
+                "auxillary_file_paths": [
+                    "results\\SuperNego_Training_v1\\NegoAgent\\NegoAgent-1199950.pt"
+                ]
+            },
+            {
+                "steps": 1249950,
+                "file_path": "results\\SuperNego_Training_v1\\NegoAgent\\NegoAgent-1249950.onnx",
+                "reward": -1.9706455402904086,
+                "creation_time": 1763400934.797277,
+                "auxillary_file_paths": [
+                    "results\\SuperNego_Training_v1\\NegoAgent\\NegoAgent-1249950.pt"
+                ]
+            },
+            {
+                "steps": 1299950,
+                "file_path": "results\\SuperNego_Training_v1\\NegoAgent\\NegoAgent-1299950.onnx",
+                "reward": -1.8568475246429443,
+                "creation_time": 1763401152.2919254,
+                "auxillary_file_paths": [
+                    "results\\SuperNego_Training_v1\\NegoAgent\\NegoAgent-1299950.pt"
+                ]
+            },
+            {
+                "steps": 1349950,
+                "file_path": "results\\SuperNego_Training_v1\\NegoAgent\\NegoAgent-1349950.onnx",
+                "reward": -1.8476101351635796,
+                "creation_time": 1763401374.0038908,
+                "auxillary_file_paths": [
+                    "results\\SuperNego_Training_v1\\NegoAgent\\NegoAgent-1349950.pt"
+                ]
+            },
+            {
+                "steps": 1392450,
+                "file_path": "results\\SuperNego_Training_v1\\NegoAgent\\NegoAgent-1392450.onnx",
+                "reward": -1.784906268119812,
+                "creation_time": 1763401701.0844798,
+                "auxillary_file_paths": [
+                    "results\\SuperNego_Training_v1\\NegoAgent\\NegoAgent-1392450.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1392450,
+            "file_path": "results\\SuperNego_Training_v1\\NegoAgent.onnx",
+            "reward": -1.784906268119812,
+            "creation_time": 1763401701.0844798,
+            "auxillary_file_paths": [
+                "results\\SuperNego_Training_v1\\NegoAgent\\NegoAgent-1392450.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.5.1"
+    }
+}

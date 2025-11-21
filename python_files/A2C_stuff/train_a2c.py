@@ -4,6 +4,7 @@ import gymnasium  # Nowy gym dla Stable Baselines
 
 from mlagents_envs.environment import UnityEnvironment
 from mlagents_envs.envs.unity_gym_env import UnityToGymWrapper
+from mlagents_envs.side_channel.engine_configuration_channel import EngineConfigurationChannel
 
 # --- IMPORTUJEMY A2C ---
 from stable_baselines3 import A2C
@@ -40,7 +41,7 @@ class UnityVectorObservationWrapper(gym.Wrapper):
 
 def main():
     # 1. KONFIGURACJA ŚCIEŻKI (Twoja ścieżka do Builda)
-    unity_env_path = r"D:\UnityProjects\negotiation_agents\Build\ML-Agents-Project.exe"
+    unity_env_path = r"../../Build/ML-Agents-Project.exe"
 
     models_dir = "models/A2C"
     log_dir = "logs_a2c"
@@ -49,7 +50,10 @@ def main():
     os.makedirs(log_dir, exist_ok=True)
 
     print("1. Uruchamiam środowisko Unity...")
-    unity_env = UnityEnvironment(file_name=unity_env_path, seed=1, no_graphics=False, worker_id=2)
+    channel = EngineConfigurationChannel()
+    channel.set_configuration_parameters(width=80, height=80, quality_level=1, time_scale=20.0, target_frame_rate=-1)
+
+    unity_env = UnityEnvironment(file_name=unity_env_path, seed=1, no_graphics=True, worker_id=2, side_channels=[channel])
     # Zmieniłem worker_id na 2, żeby nie gryzł się z DQN, jakbyś odpaliła oba naraz :)
 
     print("2. Konwertuję środowisko (Pełna rura)...")
@@ -96,7 +100,7 @@ def main():
 
     print("4. ROZPOCZYNAM TRENING (A2C)! 🚀")
     # 200 000 kroków dla A2C to chwila moment
-    model.learn(total_timesteps=200000, callback=checkpoint_callback)
+    model.learn(total_timesteps=300000, callback=checkpoint_callback)
 
     print("5. Zapisuję...")
     model.save(f"{models_dir}/a2c_negotiation_final")
