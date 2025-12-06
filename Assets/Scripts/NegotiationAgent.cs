@@ -7,6 +7,14 @@ using System.Collections.Generic;
 // using System;
 // using Unity.Mathematics;
 
+public enum StrategyType
+{
+    RL,
+    Egoist,
+    Cooperative,
+    Random
+}
+
 
 public class NegotiationAgent : Agent
 {
@@ -19,12 +27,18 @@ public class NegotiationAgent : Agent
     private float episodeTimer;
     public NegotiationAgent agent2;
     public NegotiationAgent agent3;
+    [Header("Ustawienia Strategii")]
+    [Tooltip("RL = Model sieci. Inne = Skrypt.")]
+    public StrategyType currentStrategy = StrategyType.RL;
     private List<NegotiationAgent> otherAgents;
     private enum TradeType {FoodForEnergy, EnergyForFood};
     [Tooltip("Pokazuje bieżącą, nieskalowaną karę. Cel to 0.")]
     public float currentImbalanceDebug;
 
     public Renderer robotRenderer; //żeby je kolorowac
+
+    private int stepCounter = 0; 
+    public int decisionPeriod = 5;
 
 
 
@@ -47,9 +61,43 @@ public class NegotiationAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        int tradeAction = actions.DiscreteActions[0];
+        if (currentStrategy == StrategyType.RL)
+        {
+            int action = actions.DiscreteActions[0];
+            ExecuteAction(action); // Wywołujemy nową funkcję
+        }
+    }
 
-        switch (tradeAction)
+    void FixedUpdate()
+    {
+        // Dla agentów skryptowych (eoisgt i kooperanci), wykonaj akcję co określoną liczbę kroków
+        if (currentStrategy != StrategyType.RL)
+        {
+            stepCounter++;
+            if (stepCounter >= decisionPeriod)
+            {
+                int action = GetScriptedAction();
+                ExecuteAction(action);
+                stepCounter = 0;
+            }
+        }
+
+
+        float imbalance = Mathf.Abs(food - energy);
+        currentImbalanceDebug = -imbalance;
+        float scaledPenalty = (imbalance / 100.0f) * Time.fixedDeltaTime;
+        AddReward(-scaledPenalty);
+
+        episodeTimer += Time.fixedDeltaTime;
+        if (episodeTimer >= maxEpisodeTime)
+        {
+            EndEpisode();
+        }
+    }
+
+    private void ExecuteAction(int action)
+    {
+        switch (action)
         {
             case 0:  //nic ne rób
                 break;
@@ -68,8 +116,95 @@ public class NegotiationAgent : Agent
                 }
                 break;
         }
-
     }
+
+    private int GetScriptedAction()
+    {
+        switch(currentStrategy)
+        {
+            case StrategyType.Egoist:
+                float imbalance = food - energy;
+                if (imbalance > 5f)
+                {
+                    return 2; // Wymień energię za jedzenie
+                }
+                else if (imbalance < -5f)
+                {
+                    return 1; // Wymień jedzenie za energię
+                }
+                else
+                {
+                    return 0; // Nic nie rób
+                }
+            
+            case StrategyType.Cooperative:
+                return CalculateCooperativeAction();
+            
+            case StrategyType.Random:
+                return Random.Range(0, 3); // Losowa akcja: 0, 1 lub 2
+            default:
+                return 0; // Domyślnie nic nie rób
+        }
+    }
+
+    private int CalculateCooperativeAction()
+    {
+        float currentGlobalImbalance = GetGlobalImbalance();
+
+        float imbalanceIfAction1 = currentGlobalImbalance;
+        NegotiationAgent bestAgent1 = FindBestPartner(TradeType.FoodForEnergy);
+        if (bestAgent1 != null)
+        {
+            float myOldImbalance = Mathf.Abs(food - energy);
+            float myNewImbalance = Mathf.Abs((food - 1f) - (energy + 1f));
+
+            float targetOldImbalance = Mathf.Abs(bestAgent1.food - bestAgent1.energy);
+            float targetNewImbalance = Mathf.Abs((bestAgent1.food + 1f) - (bestAgent1.energy - 1f));
+
+            imbalanceIfAction1 = (myNewImbalance + targetNewImbalance) - (myOldImbalance + targetOldImbalance);
+        }
+
+        float imbalanceIfAction2 = currentGlobalImbalance;
+        NegotiationAgent bestAgent2 = FindBestPartner(TradeType.EnergyForFood);
+        if (bestAgent2 != null)
+        {
+            float myOldImbalance = Mathf.Abs(food - energy);
+            float myNewImbalance = Mathf.Abs((food + 1f) - (energy - 1f));
+
+            float targetOldImbalance = Mathf.Abs(bestAgent2.food - bestAgent2.energy);
+            float targetNewImbalance = Mathf.Abs((bestAgent2.food - 1f) - (bestAgent2.energy + 1f));
+
+            imbalanceIfAction2 = (myNewImbalance + targetNewImbalance) - (myOldImbalance + targetOldImbalance);
+        }
+
+        if (imbalanceIfAction1 < currentGlobalImbalance && imbalanceIfAction1 <= imbalanceIfAction2)
+        {
+            return 1; // Wymień jedzenie za energię
+        }
+        else if (imbalanceIfAction2 < currentGlobalImbalance && imbalanceIfAction2 < imbalanceIfAction1)
+        {
+            return 2; // Wymień energię za jedzenie
+        }
+        else
+        {
+            return 0; // Nic nie rób
+        }
+    }
+
+    private float GetGlobalImbalance()
+    {
+        float sum = Mathf.Abs(food - energy);
+        if (agent2 != null)
+        {
+            sum += Mathf.Abs(agent2.food - agent2.energy);
+        }
+        if (agent3 != null)
+        {
+            sum += Mathf.Abs(agent3.food - agent3.energy);
+        }
+        return sum;
+    }
+
     
     private NegotiationAgent FindBestPartner(TradeType tradeType)
     {
@@ -158,26 +293,6 @@ public class NegotiationAgent : Agent
 
         robotRenderer.material.color = NewColor;
         
-    }
-
-    void FixedUpdate()
-    {
-        float imbalance = Mathf.Abs(food - energy);
-        currentImbalanceDebug = -imbalance;
-
-        float scaledPenalty = (imbalance / 100.0f) * Time.fixedDeltaTime;
-
-        AddReward(-scaledPenalty);
-
-
-        episodeTimer += Time.fixedDeltaTime;
-
-        // Sprawdzamy, czy czas epizodu został przekroczony
-        if (episodeTimer >= maxEpisodeTime)
-        {
-            // Debug.Log("Czas minął! Reset epizodu.");
-            EndEpisode(); // Kończymy epizod i wywołujemy OnEpisodeBegin()
-        }
     }
 
     private void HandleTrade(TradeType tradeType, NegotiationAgent targetAgent)
