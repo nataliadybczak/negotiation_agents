@@ -1,327 +1,209 @@
 using UnityEngine;
-using Unity.MLAgents;
-using Unity.MLAgents.Actuators;
-using Unity.MLAgents.Sensors;
 using TMPro;
 using System.Collections.Generic;
-// using System;
-// using Unity.Mathematics;
 
-public enum StrategyType
-{
-    RL,
-    Egoist,
-    Cooperative,
-    Random
-}
+public enum StrategyType {RL, Egoist, Cooperative, Random};
 
-
-public class NegotiationAgent : Agent
+// To teraz zwykły MonoBehaviour - nie wymaga BehaviorParameters!
+public class NegotiationAgent : MonoBehaviour
 {
     private Rigidbody rb;
-    // public float moveSpeed = 10f; 
     public float food;
     public float energy;    
     public TextMeshProUGUI statusText;
     public float maxEpisodeTime = 10f;
     private float episodeTimer;
+    
+    // Teraz wszyscy są NegotiationAgent, więc typy pasują!
     public NegotiationAgent agent2;
     public NegotiationAgent agent3;
+
+    [Header("Ekonomia (Preferencje)")]
+    [Tooltip("Ile warta jest 1 jednostka jedzenia dla tego agenta?")]
+    public float foodUtility = 1.0f; 
+    
+    [Tooltip("Ile warta jest 1 jednostka energii dla tego agenta?")]
+    public float energyUtility = 1.0f;
+    
     [Header("Ustawienia Strategii")]
-    [Tooltip("RL = Model sieci. Inne = Skrypt.")]
     public StrategyType currentStrategy = StrategyType.RL;
-    private List<NegotiationAgent> otherAgents;
-    private enum TradeType {FoodForEnergy, EnergyForFood};
-    [Tooltip("Pokazuje bieżącą, nieskalowaną karę. Cel to 0.")]
+
+    public enum TradeType {FoodForEnergy, EnergyForFood};
     public float currentImbalanceDebug;
+    public Renderer robotRenderer; 
 
-    public Renderer robotRenderer; //żeby je kolorowac
+    public enum TradeIntention {None, OfferFoodForEnergy, OfferEnergyForFood};
 
-    private int stepCounter = 0; 
-    public int decisionPeriod = 5;
+    [Header("Stan Negocjacji")]
+    [Tooltip("Co ten agent sygnalizuje innym w tej klatce?")]
+    public TradeIntention currentIntent = TradeIntention.None;
 
+    public GameObject iconFoodOffer;   // w Unity (np. czerwona kuleczka)
+    public GameObject iconEnergyOffer; // w Unity (np. niebieska kuleczka)
 
+    // --- REFERENCJA DO TRENERA (Dla Jacka) ---
+    // Jeśli ten agent jest sterowany przez PPO/DQN, tutaj wpinamy "Mózg"
+    [HideInInspector] public JacekBrain myBrain; 
 
-    public override void Initialize()
+    void Start() // Zamiast Initialize
     {
         rb = GetComponent<Rigidbody>();
-
-        //Szukamy innych agentów
-        if (agent2 != null && agent3 != null)
-        {
-            otherAgents = new List<NegotiationAgent> {agent2, agent3};
-        }
-        else
-        {
-            Debug.LogError($"Agenci 'agent2' i 'agent3' nie są przypisani w {gameObject.name}!");
-
-        }
-
     }
 
-    public override void OnActionReceived(ActionBuffers actions)
+    // Ta funkcja jest wywoływana przez MÓZG (JacekBrain) lub przez Skrypt (FixedUpdate)
+    public void ProcessAction(int action)
     {
-        if (currentStrategy == StrategyType.RL)
+        switch (action)
         {
-            int action = actions.DiscreteActions[0];
-            ExecuteAction(action); // Wywołujemy nową funkcję
+            case 0: break;
+            case 1: // Food -> Energy
+                NegotiationAgent bestAgentFood = FindBestPartner(TradeType.FoodForEnergy);
+                if (bestAgentFood != null) HandleTrade(TradeType.FoodForEnergy, bestAgentFood);
+                break;
+            case 2: // Energy -> Food
+                NegotiationAgent bestAgentEnergy = FindBestPartner(TradeType.EnergyForFood);
+                if (bestAgentEnergy != null) HandleTrade(TradeType.EnergyForFood, bestAgentEnergy);
+                break;
         }
     }
 
     void FixedUpdate()
     {
-        // Dla agentów skryptowych (eoisgt i kooperanci), wykonaj akcję co określoną liczbę kroków
+        // 1. Logika dla Agentów SKRYPTOWYCH (Egoist/Coop/Random)
         if (currentStrategy != StrategyType.RL)
         {
-            stepCounter++;
-            if (stepCounter >= decisionPeriod)
+            // Decyzja co 5 klatek (symulacja czasu reakcji)
+            if (Time.frameCount % 5 == 0)
             {
-                int action = GetScriptedAction();
-                ExecuteAction(action);
-                stepCounter = 0;
+                int scriptedAction = GetScriptedAction();
+                ProcessAction(scriptedAction);
             }
         }
 
+        // 2. Fizyka i Nagrody
+        // dodajemy wagę jedzenia i energii
+        float perceivedFood = food * foodUtility;
+        float perceivedEnergy = energy * energyUtility;
 
-        float imbalance = Mathf.Abs(food - energy);
+
+        float imbalance = Mathf.Abs(perceivedFood - perceivedEnergy);
         currentImbalanceDebug = -imbalance;
+        
+        // Obliczamy karę
         float scaledPenalty = (imbalance / 100.0f) * Time.fixedDeltaTime;
-        AddReward(-scaledPenalty);
 
+        // JEŚLI mam podpięty mózg ML (Jacek), wysyłam mu nagrodę
+        if (myBrain != null)
+        {
+            myBrain.AddReward(-scaledPenalty);
+        }
+
+        // 3. Zarządzanie czasem
         episodeTimer += Time.fixedDeltaTime;
         if (episodeTimer >= maxEpisodeTime)
         {
-            EndEpisode();
+            ResetAgent(); // Resetuje tylko siebie
+            // Jeśli mam mózg, mówię mu, że to koniec epizodu
+            if (myBrain != null) myBrain.EndEpisode();
         }
+        
+        UpdateColor();
+        UpdateText();
     }
 
-    private void ExecuteAction(int action)
+    public void ResetAgent()
     {
-        switch (action)
-        {
-            case 0:  //nic ne rób
-                break;
-            case 1:  //jedzenie -> energa
-                NegotiationAgent bestAgentFood = FindBestPartner(TradeType.FoodForEnergy);
-                if (bestAgentFood != null)
-                {
-                    HandleTrade(TradeType.FoodForEnergy, bestAgentFood);
-                }
-                break;
-            case 2: //energia -> jedzenie
-                NegotiationAgent bestAgentEnergy = FindBestPartner(TradeType.EnergyForFood);
-                if (bestAgentEnergy != null)
-                {
-                    HandleTrade(TradeType.EnergyForFood, bestAgentEnergy);
-                }
-                break;
-        }
+        transform.localPosition = new Vector3(Random.Range(-4f, 4f), 0.5f, Random.Range(-4f, 4f));
+        food = Random.Range(20f, 80f);
+        energy = Random.Range(40f, 100f);
+        episodeTimer = 0f;
     }
 
+    // --- LOGIKA POMOCNICZA---
     private int GetScriptedAction()
     {
-        switch(currentStrategy)
+        switch (currentStrategy)
         {
+            case StrategyType.Random: return Random.Range(0, 3);
+
+
             case StrategyType.Egoist:
-                float imbalance = food - energy;
-                if (imbalance > 5f)
-                {
-                    return 2; // Wymień energię za jedzenie
-                }
-                else if (imbalance < -5f)
-                {
-                    return 1; // Wymień jedzenie za energię
-                }
-                else
-                {
-                    return 0; // Nic nie rób
-                }
-            
-            case StrategyType.Cooperative:
-                return CalculateCooperativeAction();
-            
-            case StrategyType.Random:
-                return Random.Range(0, 3); // Losowa akcja: 0, 1 lub 2
-            default:
-                return 0; // Domyślnie nic nie rób
+                float valFood = food * foodUtility;
+                float valEnergy = energy * energyUtility;
+                float myDiff = valFood - valEnergy;
+
+                if (myDiff > 2.0f) return 1;
+                if (myDiff < -2.0f) return 2;
+                return 0;
+
+
+            case StrategyType.Cooperative: return CalculateCooperativeAction();
+
+
+            default: return 0;
         }
     }
 
     private int CalculateCooperativeAction()
     {
-        float currentGlobalImbalance = GetGlobalImbalance();
-
-        float imbalanceIfAction1 = currentGlobalImbalance;
-        NegotiationAgent bestAgent1 = FindBestPartner(TradeType.FoodForEnergy);
-        if (bestAgent1 != null)
-        {
-            float myOldImbalance = Mathf.Abs(food - energy);
-            float myNewImbalance = Mathf.Abs((food - 1f) - (energy + 1f));
-
-            float targetOldImbalance = Mathf.Abs(bestAgent1.food - bestAgent1.energy);
-            float targetNewImbalance = Mathf.Abs((bestAgent1.food + 1f) - (bestAgent1.energy - 1f));
-
-            imbalanceIfAction1 = (myNewImbalance + targetNewImbalance) - (myOldImbalance + targetOldImbalance);
+        float currentGlobalError = GetGlobalImbalance();
+        float errorIfAction1 = currentGlobalError;
+        NegotiationAgent partner1 = FindBestPartner(TradeType.FoodForEnergy);
+        if (partner1 != null) {
+            float myNewErr = Mathf.Abs((food - 1) - (energy + 1));
+            float pNewErr = Mathf.Abs((partner1.food + 1) - (partner1.energy - 1));
+            errorIfAction1 = currentGlobalError - Mathf.Abs(food - energy) - Mathf.Abs(partner1.food - partner1.energy) + myNewErr + pNewErr;
         }
-
-        float imbalanceIfAction2 = currentGlobalImbalance;
-        NegotiationAgent bestAgent2 = FindBestPartner(TradeType.EnergyForFood);
-        if (bestAgent2 != null)
-        {
-            float myOldImbalance = Mathf.Abs(food - energy);
-            float myNewImbalance = Mathf.Abs((food + 1f) - (energy - 1f));
-
-            float targetOldImbalance = Mathf.Abs(bestAgent2.food - bestAgent2.energy);
-            float targetNewImbalance = Mathf.Abs((bestAgent2.food - 1f) - (bestAgent2.energy + 1f));
-
-            imbalanceIfAction2 = (myNewImbalance + targetNewImbalance) - (myOldImbalance + targetOldImbalance);
+        float errorIfAction2 = currentGlobalError;
+        NegotiationAgent partner2 = FindBestPartner(TradeType.EnergyForFood);
+        if (partner2 != null) {
+            float myNewErr = Mathf.Abs((food + 1) - (energy - 1));
+            float pNewErr = Mathf.Abs((partner2.food - 1) - (partner2.energy + 1));
+            errorIfAction2 = currentGlobalError - Mathf.Abs(food - energy) - Mathf.Abs(partner2.food - partner2.energy) + myNewErr + pNewErr;
         }
-
-        if (imbalanceIfAction1 < currentGlobalImbalance && imbalanceIfAction1 <= imbalanceIfAction2)
-        {
-            return 1; // Wymień jedzenie za energię
-        }
-        else if (imbalanceIfAction2 < currentGlobalImbalance && imbalanceIfAction2 < imbalanceIfAction1)
-        {
-            return 2; // Wymień energię za jedzenie
-        }
-        else
-        {
-            return 0; // Nic nie rób
-        }
+        if (errorIfAction1 < currentGlobalError && errorIfAction1 <= errorIfAction2) return 1;
+        if (errorIfAction2 < currentGlobalError && errorIfAction2 < errorIfAction1) return 2;
+        return 0;
     }
 
-    private float GetGlobalImbalance()
-    {
+    private float GetGlobalImbalance() {
         float sum = Mathf.Abs(food - energy);
-        if (agent2 != null)
-        {
-            sum += Mathf.Abs(agent2.food - agent2.energy);
-        }
-        if (agent3 != null)
-        {
-            sum += Mathf.Abs(agent3.food - agent3.energy);
-        }
+        if (agent2 != null) sum += Mathf.Abs(agent2.food - agent2.energy);
+        if (agent3 != null) sum += Mathf.Abs(agent3.food - agent3.energy);
         return sum;
     }
 
-    
-    private NegotiationAgent FindBestPartner(TradeType tradeType)
-    {
+    private NegotiationAgent FindBestPartner(TradeType tradeType) {
         NegotiationAgent[] candidates = new NegotiationAgent[] { agent2, agent3 };
         NegotiationAgent bestAgent = null;
-        float bestValue = Mathf.Infinity;
-
-        foreach (var candidate in candidates)
-        {
-            float candidateValue = 0f;
-
-            if (tradeType == TradeType.FoodForEnergy)
-            {
-                candidateValue = candidate.food;
-            }
-            else if (tradeType == TradeType.EnergyForFood)
-            {
-                candidateValue = candidate.energy;
-            }
-
-            if (candidateValue < bestValue)
-            {
-                bestValue = candidateValue;
-                bestAgent = candidate;
-            }
+        float bestScore = -Mathf.Infinity; 
+        foreach (var candidate in candidates) {
+            if (candidate == null) continue;
+            float score = 0f;
+            if (tradeType == TradeType.FoodForEnergy) score = candidate.energy - candidate.food;
+            else if (tradeType == TradeType.EnergyForFood) score = candidate.food - candidate.energy;
+            if (score > bestScore) { bestScore = score; bestAgent = candidate; }
         }
-
         return bestAgent;
     }
 
-    public override void CollectObservations(VectorSensor sensor)
-    {
-        // // Ta linia jest kluczowa, aby naprawić błąd z konsoli
-        // sensor.AddObservation(0f);
-
-        //Obserwacja siebie
-        sensor.AddObservation(this.food);
-        sensor.AddObservation(this.energy);
-
-        //Obserwacja agenta2
-        sensor.AddObservation(agent2.food);
-        sensor.AddObservation(agent2.energy);
-
-        //Obserwacja agenta3
-        sensor.AddObservation(agent3.food);
-        sensor.AddObservation(agent3.energy);
-
-        // Debug.Log($"Agent {gameObject.name} obserwuje: Self({food:F1}, {energy:F1}), " +
-        //           $"A2({agent2.food:F1}, {agent2.energy:F1}), " +
-        //           $"A3({agent3.food:F1}, {agent3.energy:F1})");
-    }
-
-    public override void OnEpisodeBegin()
-    {
-        rb.velocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
-
-        transform.localPosition = new Vector3(Random.Range(-4f, 4f), 0.5f, Random.Range(-4f, 4f));
-
-        food = Random.Range(20f, 80f);
-        energy = Random.Range(40f, 100f);
-
-        Debug.Log($"Nowy epizod! Agent: {gameObject.name}, Food: {food}, Energy: {energy}");
-
-        episodeTimer = 0f;
-        currentImbalanceDebug = -Mathf.Abs(food - energy);
-    }
-
-    public void Update()
-    {
-        if (statusText != null)
-        {
-            statusText.text = $"Food: {food.ToString("F1")}\nEnergy: {energy.ToString("F1")}";
-        }
-        if (robotRenderer == null) return;
-
-        Color goodBalanceColor = Color.green;
-        Color badBalanceColor = Color.red;
-
-        float maxImbalance = 100f;
-        float currentImbalance = Mathf.Abs(food - energy);
-
-        float normalizedImbalance = Mathf.Clamp01(currentImbalance / maxImbalance);
-
-        Color NewColor = Color.Lerp(goodBalanceColor, badBalanceColor, normalizedImbalance);
-
-        robotRenderer.material.color = NewColor;
-        
-    }
-
-    private void HandleTrade(TradeType tradeType, NegotiationAgent targetAgent)
-    {
-        if (otherAgents == null || otherAgents.Count == 0) return;
-
-        if (tradeType == TradeType.FoodForEnergy)
-        {
-            if (this.food >= 1f && targetAgent.energy >= 1f)
-            {
-                this.food -= 1f;
-                targetAgent.energy -= 1f;
-                this.energy += 1f;
-                targetAgent.food += 1f;
-
-                Debug.Log($"[{gameObject.name}] wymienił 1 FOOD za 1 ENERGY z [{targetAgent.gameObject.name}]");
+    private void HandleTrade(TradeType tradeType, NegotiationAgent targetAgent) {
+        if (tradeType == TradeType.FoodForEnergy) {
+            if (this.food >= 1f && targetAgent.energy >= 1f) {
+                this.food -= 1f; targetAgent.energy -= 1f; this.energy += 1f; targetAgent.food += 1f;
             }
-        } else if (tradeType == TradeType.EnergyForFood)
-        {
-            if (this.energy >= 1f && targetAgent.food >= 1f)
-            {
-                this.energy -= 1f;
-                targetAgent.food -= 1f;
-                this.food += 1f;
-                targetAgent.energy += 1f;
-
-                Debug.Log($"[{gameObject.name}] wymienił 1 ENERGY za 1 FOOD z [{targetAgent.gameObject.name}]");
+        } else if (tradeType == TradeType.EnergyForFood) {
+            if (this.energy >= 1f && targetAgent.food >= 1f) {
+                this.energy -= 1f; targetAgent.food -= 1f; this.food += 1f; targetAgent.energy += 1f;
             }
         }
     }
 
+    void UpdateText() { if (statusText != null) statusText.text = $"F: {food:F0} (x{foodUtility})\nE: {energy:F0} (x{energyUtility})"; }
+    void UpdateColor() {
+         if (robotRenderer == null) return;
+         Color good = Color.green; Color bad = Color.red;
+         float norm = Mathf.Clamp01(Mathf.Abs(food - energy) / 100f);
+         robotRenderer.material.color = Color.Lerp(robotRenderer.material.color, Color.Lerp(good, bad, norm), Time.deltaTime * 5f);
+    }
 }
