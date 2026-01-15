@@ -1,5 +1,5 @@
 behaviors:
-  NegoAgent:
+  JacekMaster:
     trainer_type: ppo
     hyperparameters:
       batch_size: 128
@@ -20,7 +20,7 @@ behaviors:
       extrinsic:
         gamma: 0.99
         strength: 1.0
-    max_steps: 2000000
+    max_steps: 2300000
     time_horizon: 64
     summary_freq: 5000
     checkpoint_interval: 50000

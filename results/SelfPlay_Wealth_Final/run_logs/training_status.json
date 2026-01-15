@@ -1,0 +1,65 @@
+{
+    "JacekMaster": {
+        "checkpoints": [
+            {
+                "steps": 2149950,
+                "file_path": "results\\SelfPlay_Wealth_Final\\JacekMaster\\JacekMaster-2149950.onnx",
+                "reward": 8.24604554790439,
+                "creation_time": 1765312528.6490717,
+                "auxillary_file_paths": [
+                    "results\\SelfPlay_Wealth_Final\\JacekMaster\\JacekMaster-2149950.pt"
+                ]
+            },
+            {
+                "steps": 2199950,
+                "file_path": "results\\SelfPlay_Wealth_Final\\JacekMaster\\JacekMaster-2199950.onnx",
+                "reward": 7.906327166557312,
+                "creation_time": 1765312687.9720497,
+                "auxillary_file_paths": [
+                    "results\\SelfPlay_Wealth_Final\\JacekMaster\\JacekMaster-2199950.pt"
+                ]
+            },
+            {
+                "steps": 2249950,
+                "file_path": "results\\SelfPlay_Wealth_Final\\JacekMaster\\JacekMaster-2249950.onnx",
+                "reward": 8.324630519923042,
+                "creation_time": 1765312847.3767376,
+                "auxillary_file_paths": [
+                    "results\\SelfPlay_Wealth_Final\\JacekMaster\\JacekMaster-2249950.pt"
+                ]
+            },
+            {
+                "steps": 2299950,
+                "file_path": "results\\SelfPlay_Wealth_Final\\JacekMaster\\JacekMaster-2299950.onnx",
+                "reward": 4.392520123057896,
+                "creation_time": 1765313006.90937,
+                "auxillary_file_paths": [
+                    "results\\SelfPlay_Wealth_Final\\JacekMaster\\JacekMaster-2299950.pt"
+                ]
+            },
+            {
+                "steps": 2300100,
+                "file_path": "results\\SelfPlay_Wealth_Final\\JacekMaster\\JacekMaster-2300100.onnx",
+                "reward": 4.778822988271713,
+                "creation_time": 1765313006.967552,
+                "auxillary_file_paths": [
+                    "results\\SelfPlay_Wealth_Final\\JacekMaster\\JacekMaster-2300100.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 2300100,
+            "file_path": "results\\SelfPlay_Wealth_Final\\JacekMaster.onnx",
+            "reward": 4.778822988271713,
+            "creation_time": 1765313006.967552,
+            "auxillary_file_paths": [
+                "results\\SelfPlay_Wealth_Final\\JacekMaster\\JacekMaster-2300100.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.5.1"
+    }
+}

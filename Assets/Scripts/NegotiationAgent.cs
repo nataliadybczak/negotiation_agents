@@ -1,6 +1,10 @@
 using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
+using System;
+using System.IO;
+using System.Text;
+using System.Globalization;
 
 public enum StrategyType {RL, Egoist, Cooperative, Random};
 
@@ -13,10 +17,21 @@ public class NegotiationAgent : MonoBehaviour
     public TextMeshProUGUI statusText;
     public float maxEpisodeTime = 10f;
     private float episodeTimer;
+
+    private string logFilePath;
+    private float logTimer = 0f;
+    private int stepCounter = 0;
+
+    private NegotiationAgent[] allAgentsCache;
+
+    private Vector3 targetPosition; // Gdzie agent ma iść
+    public float moveSpeed = 1.0f;  // Jak szybko ma tam płynąć (im mniej, tym wolniej)
     
     // Teraz wszyscy są NegotiationAgent, więc typy pasują!
     public NegotiationAgent agent2;
     public NegotiationAgent agent3;
+    [Header("Ustawienia Strategii")]
+    public StrategyType currentStrategy = StrategyType.RL;
 
     [Header("Ekonomia (Preferencje)")]
     [Tooltip("Ile warta jest 1 jednostka jedzenia dla tego agenta?")]
@@ -24,9 +39,16 @@ public class NegotiationAgent : MonoBehaviour
     
     [Tooltip("Ile warta jest 1 jednostka energii dla tego agenta?")]
     public float energyUtility = 1.0f;
-    
-    [Header("Ustawienia Strategii")]
-    public StrategyType currentStrategy = StrategyType.RL;
+
+    [Header("Ekonomia (Fizjologia)")]
+    [Tooltip("Ile zasobów (Food ORAZ Energy) agent zużywa na sekundę.")]
+    public float metabolismRate = 2.0f; 
+
+    [Tooltip("Ile JEDZENIA agent produkuje na sekundę (Regeneracja).")]
+    public float foodProductionRate = 0.0f;
+
+    [Tooltip("Ile ENERGII agent produkuje na sekundę (Regeneracja).")]
+    public float energyProductionRate = 0.0f;
 
     public enum TradeType {FoodForEnergy, EnergyForFood};
     public float currentImbalanceDebug;
@@ -38,8 +60,19 @@ public class NegotiationAgent : MonoBehaviour
     [Tooltip("Co ten agent sygnalizuje innym w tej klatce?")]
     public TradeIntention currentIntent = TradeIntention.None;
 
-    public GameObject iconFoodOffer;   // w Unity (np. czerwona kuleczka)
-    public GameObject iconEnergyOffer; // w Unity (np. niebieska kuleczka)
+    [Header("Ograniczenia Handlu")]
+    public float tradeCooldownDuration = 2.0f; // 2 sekundy przerwy po handlu
+    private float currentTradeCooldown = 0f;
+
+    [Header("Stabilizacja Wizualna")]
+    public float minFlagTime = 0.5f; // Ile czasu flaga musi wisieć (pół sekundy)
+    private float flagTimer = 0f;    // Licznik czasu
+
+    public GameObject iconFoodOffer;   // w Unity
+    public GameObject iconEnergyOffer;
+
+    [Header("Ustawienia Środowiska")]
+    public float spawnRange = 12f;
 
     // --- REFERENCJA DO TRENERA (Dla Jacka) ---
     // Jeśli ten agent jest sterowany przez PPO/DQN, tutaj wpinamy "Mózg"
@@ -48,31 +81,158 @@ public class NegotiationAgent : MonoBehaviour
     void Start() // Zamiast Initialize
     {
         rb = GetComponent<Rigidbody>();
+        targetPosition = transform.localPosition;
+
+        // Zapiszemy plik na Pulpicie lub w folderze projektu
+        logFilePath = "Log_" + gameObject.name + ".csv";
+        // Tworzymy nagłówek tabeli
+        if (!File.Exists(logFilePath)) {
+            File.WriteAllText(logFilePath, "Step,Food,Energy,Imbalance\n");
+        }
     }
 
     // Ta funkcja jest wywoływana przez MÓZG (JacekBrain) lub przez Skrypt (FixedUpdate)
     public void ProcessAction(int action)
     {
+        if (flagTimer > 0)
+        {
+            flagTimer -= Time.fixedDeltaTime;
+        }
+        
         switch (action)
         {
-            case 0: break;
-            case 1: // Food -> Energy
-                NegotiationAgent bestAgentFood = FindBestPartner(TradeType.FoodForEnergy);
-                if (bestAgentFood != null) HandleTrade(TradeType.FoodForEnergy, bestAgentFood);
+            case 0: 
+                if (flagTimer <= 0)
+                {
+                    currentIntent = TradeIntention.None;
+                }
                 break;
-            case 2: // Energy -> Food
-                NegotiationAgent bestAgentEnergy = FindBestPartner(TradeType.EnergyForFood);
-                if (bestAgentEnergy != null) HandleTrade(TradeType.EnergyForFood, bestAgentEnergy);
+            case 1: 
+                currentIntent = TradeIntention.OfferFoodForEnergy; 
+                flagTimer = minFlagTime;
+                break;
+            case 2: 
+                currentIntent = TradeIntention.OfferEnergyForFood; 
+                flagTimer = minFlagTime;
                 break;
         }
+
+        // Aktualizacja wizualna (żebyś widziała, co myślą)
+        UpdateVisuals();
+
+        // 2. PRÓBA HANDLU (Tylko jeśli chcemy handlować)
+        if (currentIntent != TradeIntention.None)
+        {
+            TryExecuteHandshake();
+        }
+    }
+
+    private void TryExecuteHandshake()
+    {
+        if (currentTradeCooldown > 0) return;
+
+        NegotiationAgent partner = FindWillingPartner();
+        if (partner != null)
+        {
+            if (partner.currentTradeCooldown <= 0)
+            {
+                PerformTrade(partner);
+                
+                // Ustawiamy cooldown dla OBU stron
+                this.currentTradeCooldown = tradeCooldownDuration;
+                partner.currentTradeCooldown = tradeCooldownDuration;
+                
+                // Resetujemy intencje (opuszczamy flagi po udanym handlu)
+                this.currentIntent = TradeIntention.None;
+                partner.currentIntent = TradeIntention.None;
+            }
+        }
+    }
+
+    private NegotiationAgent FindWillingPartner()
+    {
+        NegotiationAgent[] candidates = new NegotiationAgent[] { agent2, agent3 };
+        foreach (var candidate in candidates)
+        {
+            if (candidate == null) continue;
+            if (candidate.currentIntent == TradeIntention.None) continue;
+
+            // Sprawdzamy, czy intencje się zgadzają
+            if (this.currentIntent == TradeIntention.OfferFoodForEnergy && candidate.currentIntent == TradeIntention.OfferEnergyForFood)
+            {
+                return candidate;
+            }
+            else if (this.currentIntent == TradeIntention.OfferEnergyForFood && candidate.currentIntent == TradeIntention.OfferFoodForEnergy)
+            {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    private void PerformTrade(NegotiationAgent partner)
+    {
+        if (currentIntent == TradeIntention.OfferFoodForEnergy)
+        {
+            if (this.food >= 1f && partner.energy >= 1f)
+            {
+                this.food -= 1f;
+                partner.energy -= 1f;
+                this.energy += 1f;
+                partner.food += 1f;
+
+                if (myBrain != null) myBrain.AddReward(0.2f);
+            }
+        }
+        else
+        {
+            if (this.energy >= 1 && partner.food >= 1)
+            {
+                this.energy -= 1; this.food += 1;
+                partner.energy -= 1; partner.food += 1;
+                if (myBrain != null) myBrain.AddReward(0.2f);
+            }
+        }
+    }
+
+    void UpdateVisuals()
+    {
+        if (iconFoodOffer) iconFoodOffer.SetActive(currentIntent == TradeIntention.OfferFoodForEnergy);
+        if (iconEnergyOffer) iconEnergyOffer.SetActive(currentIntent == TradeIntention.OfferEnergyForFood);
     }
 
     void FixedUpdate()
     {
-        // 1. Logika dla Agentów SKRYPTOWYCH (Egoist/Coop/Random)
+        float dt = Time.fixedDeltaTime;
+        UpdateNearestNeighbors();
+
+        food += (foodProductionRate - metabolismRate) * dt;
+        energy += (energyProductionRate - metabolismRate) * dt;
+
+        food = Mathf.Clamp(food, 0f, 100f);
+        energy = Mathf.Clamp(energy, 0f, 100f);
+
+        //? czy śmierc z głodu
+        if (food <= 0f && energy <= 0f)
+        {
+            if (myBrain != null) 
+            {
+                myBrain.AddReward(-10f); 
+                myBrain.EndEpisode();   
+            }
+            else 
+            {
+                ResetAgent();
+            }
+            return; 
+        }
+        
+        if (currentTradeCooldown > 0)
+        {
+            currentTradeCooldown -= dt;
+        }
         if (currentStrategy != StrategyType.RL)
         {
-            // Decyzja co 5 klatek (symulacja czasu reakcji)
             if (Time.frameCount % 5 == 0)
             {
                 int scriptedAction = GetScriptedAction();
@@ -80,43 +240,89 @@ public class NegotiationAgent : MonoBehaviour
             }
         }
 
-        // 2. Fizyka i Nagrody
-        // dodajemy wagę jedzenia i energii
+
         float perceivedFood = food * foodUtility;
         float perceivedEnergy = energy * energyUtility;
 
 
         float imbalance = Mathf.Abs(perceivedFood - perceivedEnergy);
         currentImbalanceDebug = -imbalance;
-        
-        // Obliczamy karę
-        float scaledPenalty = (imbalance / 100.0f) * Time.fixedDeltaTime;
 
-        // JEŚLI mam podpięty mózg ML (Jacek), wysyłam mu nagrodę
+        float wealth = (perceivedFood + perceivedEnergy) / 200.0f;
+
+        float reward = (wealth * 1.0f) - (imbalance / 100.0f * 2.0f);
+        
+        float scaledPenalty = reward * dt;
+
         if (myBrain != null)
         {
             myBrain.AddReward(-scaledPenalty);
         }
 
-        // 3. Zarządzanie czasem
-        episodeTimer += Time.fixedDeltaTime;
+        episodeTimer += dt;
         if (episodeTimer >= maxEpisodeTime)
         {
-            ResetAgent(); // Resetuje tylko siebie
-            // Jeśli mam mózg, mówię mu, że to koniec epizodu
+            ResetAgent(); 
             if (myBrain != null) myBrain.EndEpisode();
         }
+
+        if (robotRenderer == null) return;
+        transform.localPosition = Vector3.Lerp(transform.localPosition, targetPosition, Time.deltaTime * moveSpeed);
         
         UpdateColor();
         UpdateText();
+
+        logTimer += Time.fixedDeltaTime;
+    
+        if (logTimer > 0.1f) 
+        {
+            logTimer = 0f; 
+
+            float currentImbalance = Mathf.Abs((food * foodUtility) - (energy * energyUtility));
+            
+            stepCounter++;
+
+            //KROPKA (google Sheets)
+            string sFood = food.ToString("F2", CultureInfo.InvariantCulture);
+            string sEnergy = energy.ToString("F2", CultureInfo.InvariantCulture);
+            string sImbalance = currentImbalance.ToString("F2", CultureInfo.InvariantCulture);
+
+            string line = $"{stepCounter},{sFood},{sEnergy},{sImbalance}\n";
+
+            File.AppendAllText(logFilePath, line);
+        }
     }
 
     public void ResetAgent()
     {
-        transform.localPosition = new Vector3(Random.Range(-4f, 4f), 0.5f, Random.Range(-4f, 4f));
-        food = Random.Range(20f, 80f);
-        energy = Random.Range(40f, 100f);
+        float randomX = UnityEngine.Random.Range(-spawnRange, spawnRange);
+        float randomZ = UnityEngine.Random.Range(-spawnRange, spawnRange);
+
+        targetPosition = new Vector3(randomX, 0.5f, randomZ);
+        transform.localPosition = targetPosition;
+
+        food = UnityEngine.Random.Range(20f, 80f);
+        energy = UnityEngine.Random.Range(40f, 100f);
         episodeTimer = 0f;
+
+        //ich zawody: rolnik elektryk biedak
+
+        float roll = UnityEngine.Random.Range(0f, 1f);
+        if (roll < 0.33f)
+        {
+            foodProductionRate = 8f;
+            energyProductionRate = 0f;
+        }
+        else if (roll < 0.66f)
+        {
+            foodProductionRate = 0f;
+            energyProductionRate = 8f;
+        }
+        else
+        {
+            foodProductionRate = 2f;
+            energyProductionRate = 2f;
+        }
     }
 
     // --- LOGIKA POMOCNICZA---
@@ -124,7 +330,7 @@ public class NegotiationAgent : MonoBehaviour
     {
         switch (currentStrategy)
         {
-            case StrategyType.Random: return Random.Range(0, 3);
+            case StrategyType.Random: return UnityEngine.Random.Range(0, 3);
 
 
             case StrategyType.Egoist:
@@ -199,11 +405,57 @@ public class NegotiationAgent : MonoBehaviour
         }
     }
 
+    public void UpdateNearestNeighbors()
+    {
+        if (allAgentsCache == null || allAgentsCache.Length != 6) 
+        {
+            allAgentsCache = FindObjectsOfType<NegotiationAgent>();
+        }
+
+        var potentialPartners = new List<NegotiationAgent>();
+        foreach (var a in allAgentsCache)
+        {
+            if (a != null && a != this && a.gameObject.activeSelf)
+            {
+                potentialPartners.Add(a);
+            }
+        }
+
+        potentialPartners.Sort((a, b) => 
+        {
+            float distA = Vector3.Distance(transform.position, a.transform.position);
+            float distB = Vector3.Distance(transform.position, b.transform.position);
+            return distA.CompareTo(distB);
+        });
+
+        agent2 = (potentialPartners.Count >= 1) ? potentialPartners[0] : null;
+        agent3 = (potentialPartners.Count >= 2) ? potentialPartners[1] : null;
+
+
+        if (agent2 != null) 
+            Debug.DrawLine(transform.position, agent2.transform.position, Color.green); //pierwszy najblizszy
+        if (agent3 != null) 
+            Debug.DrawLine(transform.position, agent3.transform.position, Color.yellow); //drugi
+    }
+
     void UpdateText() { if (statusText != null) statusText.text = $"F: {food:F0} (x{foodUtility})\nE: {energy:F0} (x{energyUtility})"; }
     void UpdateColor() {
-         if (robotRenderer == null) return;
-         Color good = Color.green; Color bad = Color.red;
-         float norm = Mathf.Clamp01(Mathf.Abs(food - energy) / 100f);
-         robotRenderer.material.color = Color.Lerp(robotRenderer.material.color, Color.Lerp(good, bad, norm), Time.deltaTime * 5f);
+        if (robotRenderer == null) return;
+        if (food <= 1f && energy <= 1f)
+        {
+            robotRenderer.material.color = Color.Lerp(robotRenderer.material.color, Color.black, Time.deltaTime * 5f);
+            return; 
+        }
+
+        Color good = Color.green; Color bad = Color.red;
+
+        float perceivedFood = food * foodUtility;
+        float perceivedEnergy = energy * energyUtility;
+
+        float imbalance = Mathf.Abs(perceivedFood - perceivedEnergy);
+        float norm = Mathf.Clamp01(imbalance / 100.0f);
+
+        Color targetColor = Color.Lerp(good, bad, norm);
+        robotRenderer.material.color = Color.Lerp(robotRenderer.material.color, targetColor, Time.deltaTime * 5f);
     }
 }

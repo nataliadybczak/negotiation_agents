@@ -1,0 +1,65 @@
+{
+    "AgentPPO": {
+        "checkpoints": [
+            {
+                "steps": 149950,
+                "file_path": "results\\SelfPlay_v1\\AgentPPO\\AgentPPO-149950.onnx",
+                "reward": -4.413434598375769,
+                "creation_time": 1765296127.9209406,
+                "auxillary_file_paths": [
+                    "results\\SelfPlay_v1\\AgentPPO\\AgentPPO-149950.pt"
+                ]
+            },
+            {
+                "steps": 199950,
+                "file_path": "results\\SelfPlay_v1\\AgentPPO\\AgentPPO-199950.onnx",
+                "reward": -3.1687739425235324,
+                "creation_time": 1765296339.1328957,
+                "auxillary_file_paths": [
+                    "results\\SelfPlay_v1\\AgentPPO\\AgentPPO-199950.pt"
+                ]
+            },
+            {
+                "steps": 249950,
+                "file_path": "results\\SelfPlay_v1\\AgentPPO\\AgentPPO-249950.onnx",
+                "reward": -5.670282363891602,
+                "creation_time": 1765296528.081214,
+                "auxillary_file_paths": [
+                    "results\\SelfPlay_v1\\AgentPPO\\AgentPPO-249950.pt"
+                ]
+            },
+            {
+                "steps": 299950,
+                "file_path": "results\\SelfPlay_v1\\AgentPPO\\AgentPPO-299950.onnx",
+                "reward": -3.0205863347010955,
+                "creation_time": 1765296734.691991,
+                "auxillary_file_paths": [
+                    "results\\SelfPlay_v1\\AgentPPO\\AgentPPO-299950.pt"
+                ]
+            },
+            {
+                "steps": 325800,
+                "file_path": "results\\SelfPlay_v1\\AgentPPO\\AgentPPO-325800.onnx",
+                "reward": -4.349110583464305,
+                "creation_time": 1765296848.9669607,
+                "auxillary_file_paths": [
+                    "results\\SelfPlay_v1\\AgentPPO\\AgentPPO-325800.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 325800,
+            "file_path": "results\\SelfPlay_v1\\AgentPPO.onnx",
+            "reward": -4.349110583464305,
+            "creation_time": 1765296848.9669607,
+            "auxillary_file_paths": [
+                "results\\SelfPlay_v1\\AgentPPO\\AgentPPO-325800.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.5.1"
+    }
+}

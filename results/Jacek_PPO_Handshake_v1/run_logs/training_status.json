@@ -1,0 +1,29 @@
+{
+    "JacekAgentPPO": {
+        "checkpoints": [
+            {
+                "steps": 16800,
+                "file_path": "results\\Jacek_PPO_Handshake_v1\\JacekAgentPPO\\JacekAgentPPO-16800.onnx",
+                "reward": 19.345949292182922,
+                "creation_time": 1765119395.194889,
+                "auxillary_file_paths": [
+                    "results\\Jacek_PPO_Handshake_v1\\JacekAgentPPO\\JacekAgentPPO-16800.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 16800,
+            "file_path": "results\\Jacek_PPO_Handshake_v1\\JacekAgentPPO.onnx",
+            "reward": 19.345949292182922,
+            "creation_time": 1765119395.194889,
+            "auxillary_file_paths": [
+                "results\\Jacek_PPO_Handshake_v1\\JacekAgentPPO\\JacekAgentPPO-16800.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.5.1"
+    }
+}

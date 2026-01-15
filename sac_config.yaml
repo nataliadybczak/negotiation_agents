@@ -1,0 +1,27 @@
+behaviors:
+  NegoAgentSAC:  #nazwa zgadza się z "Behavior Name" w Unity!
+    trainer_type: sac 
+    hyperparameters:
+      learning_rate: 0.0003
+      learning_rate_schedule: constant
+      batch_size: 128    # SAC lubi mniejsze batche
+      buffer_size: 50000 # SAC ma "pamięć" (Replay Buffer), to kluczowa różnica!
+      buffer_init_steps: 1000
+      tau: 0.005
+      steps_per_update: 10.0
+      save_replay_buffer: false
+      init_entcoef: 0.1  # "Ciekawość" agenta. Jak nie będą się uczyć, zwiększ to.
+      reward_signal_steps_per_update: 10.0
+    network_settings:
+      normalize: false
+      hidden_units: 128
+      num_layers: 2
+      vis_encode_type: simple
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+    keep_checkpoints: 5
+    max_steps: 1000000  # Ustawiamy milion na test
+    time_horizon: 64
+    summary_freq: 10000

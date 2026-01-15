@@ -1,0 +1,65 @@
+{
+    "JacekAgentPPO": {
+        "checkpoints": [
+            {
+                "steps": 1849950,
+                "file_path": "results\\Jacek_Handshake_v2\\JacekAgentPPO\\JacekAgentPPO-1849950.onnx",
+                "reward": -1.5852452981121399,
+                "creation_time": 1765208109.171611,
+                "auxillary_file_paths": [
+                    "results\\Jacek_Handshake_v2\\JacekAgentPPO\\JacekAgentPPO-1849950.pt"
+                ]
+            },
+            {
+                "steps": 1899950,
+                "file_path": "results\\Jacek_Handshake_v2\\JacekAgentPPO\\JacekAgentPPO-1899950.onnx",
+                "reward": -1.4445174225803576,
+                "creation_time": 1765208690.0393562,
+                "auxillary_file_paths": [
+                    "results\\Jacek_Handshake_v2\\JacekAgentPPO\\JacekAgentPPO-1899950.pt"
+                ]
+            },
+            {
+                "steps": 1949950,
+                "file_path": "results\\Jacek_Handshake_v2\\JacekAgentPPO\\JacekAgentPPO-1949950.onnx",
+                "reward": -1.2065193895250559,
+                "creation_time": 1765209270.6848974,
+                "auxillary_file_paths": [
+                    "results\\Jacek_Handshake_v2\\JacekAgentPPO\\JacekAgentPPO-1949950.pt"
+                ]
+            },
+            {
+                "steps": 1999950,
+                "file_path": "results\\Jacek_Handshake_v2\\JacekAgentPPO\\JacekAgentPPO-1999950.onnx",
+                "reward": -2.156526140868664,
+                "creation_time": 1765209833.8976452,
+                "auxillary_file_paths": [
+                    "results\\Jacek_Handshake_v2\\JacekAgentPPO\\JacekAgentPPO-1999950.pt"
+                ]
+            },
+            {
+                "steps": 2000050,
+                "file_path": "results\\Jacek_Handshake_v2\\JacekAgentPPO\\JacekAgentPPO-2000050.onnx",
+                "reward": -2.0639013894833624,
+                "creation_time": 1765209834.5105486,
+                "auxillary_file_paths": [
+                    "results\\Jacek_Handshake_v2\\JacekAgentPPO\\JacekAgentPPO-2000050.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 2000050,
+            "file_path": "results\\Jacek_Handshake_v2\\JacekAgentPPO.onnx",
+            "reward": -2.0639013894833624,
+            "creation_time": 1765209834.5105486,
+            "auxillary_file_paths": [
+                "results\\Jacek_Handshake_v2\\JacekAgentPPO\\JacekAgentPPO-2000050.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.5.1"
+    }
+}

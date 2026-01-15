@@ -1,0 +1,65 @@
+{
+    "JacekMaster": {
+        "checkpoints": [
+            {
+                "steps": 349950,
+                "file_path": "results\\Jacek_Szkola_v1\\JacekMaster\\JacekMaster-349950.onnx",
+                "reward": 2.324007068857037,
+                "creation_time": 1765302452.353812,
+                "auxillary_file_paths": [
+                    "results\\Jacek_Szkola_v1\\JacekMaster\\JacekMaster-349950.pt"
+                ]
+            },
+            {
+                "steps": 399950,
+                "file_path": "results\\Jacek_Szkola_v1\\JacekMaster\\JacekMaster-399950.onnx",
+                "reward": 3.599027942866087,
+                "creation_time": 1765303117.5698242,
+                "auxillary_file_paths": [
+                    "results\\Jacek_Szkola_v1\\JacekMaster\\JacekMaster-399950.pt"
+                ]
+            },
+            {
+                "steps": 449950,
+                "file_path": "results\\Jacek_Szkola_v1\\JacekMaster\\JacekMaster-449950.onnx",
+                "reward": 3.8008282274007796,
+                "creation_time": 1765303768.803971,
+                "auxillary_file_paths": [
+                    "results\\Jacek_Szkola_v1\\JacekMaster\\JacekMaster-449950.pt"
+                ]
+            },
+            {
+                "steps": 499950,
+                "file_path": "results\\Jacek_Szkola_v1\\JacekMaster\\JacekMaster-499950.onnx",
+                "reward": 3.596503469058209,
+                "creation_time": 1765304412.8514643,
+                "auxillary_file_paths": [
+                    "results\\Jacek_Szkola_v1\\JacekMaster\\JacekMaster-499950.pt"
+                ]
+            },
+            {
+                "steps": 534800,
+                "file_path": "results\\Jacek_Szkola_v1\\JacekMaster\\JacekMaster-534800.onnx",
+                "reward": 2.54161783390575,
+                "creation_time": 1765304847.591459,
+                "auxillary_file_paths": [
+                    "results\\Jacek_Szkola_v1\\JacekMaster\\JacekMaster-534800.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 534800,
+            "file_path": "results\\Jacek_Szkola_v1\\JacekMaster.onnx",
+            "reward": 2.54161783390575,
+            "creation_time": 1765304847.591459,
+            "auxillary_file_paths": [
+                "results\\Jacek_Szkola_v1\\JacekMaster\\JacekMaster-534800.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.5.1"
+    }
+}
