@@ -1,25 +1,21 @@
 import os
-import gym  # Stary gym dla Unity
-import gymnasium  # Nowy gym dla Stable Baselines
+import gym
 
 from mlagents_envs.environment import UnityEnvironment
 from mlagents_envs.envs.unity_gym_env import UnityToGymWrapper
 from mlagents_envs.side_channel.engine_configuration_channel import EngineConfigurationChannel
 
-# --- IMPORTUJEMY A2C ---
 from stable_baselines3 import A2C
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
-# Przejściówka Gym -> Gymnasium
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 
 
-# --- WRAPPER (Ten sam co w DQN) ---
 class UnityVectorObservationWrapper(gym.Wrapper):
     """
-    Naprawia format obserwacji z Unity (Tuple -> Box)
+    Naprawia format obserwacji z Unity (z tupli do Box)
     """
 
     def __init__(self, env):
@@ -40,8 +36,7 @@ class UnityVectorObservationWrapper(gym.Wrapper):
 # -----------------------------------------
 
 def main():
-    # 1. KONFIGURACJA ŚCIEŻKI (Twoja ścieżka do Builda)
-    unity_env_path = r"../../Build/ML-Agents-Project.exe"
+    unity_env_path = r"../../Build/ML-Agents-Project.exe"  #build po eksportcie z Unity
 
     models_dir = "models/A2C"
     log_dir = "logs_a2c"
@@ -54,24 +49,18 @@ def main():
     channel.set_configuration_parameters(width=80, height=80, quality_level=1, time_scale=20.0, target_frame_rate=-1)
 
     unity_env = UnityEnvironment(file_name=unity_env_path, seed=1, no_graphics=True, worker_id=2, side_channels=[channel])
-    # Zmieniłem worker_id na 2, żeby nie gryzł się z DQN, jakbyś odpaliła oba naraz :)
 
-    print("2. Konwertuję środowisko (Pełna rura)...")
+    print("2. Konwertuję środowisko (full rura)...")
 
-    # A. Unity -> Stary Gym
     env = UnityToGymWrapper(unity_env, uint8_visual=False, allow_multiple_obs=True)
 
-    # B. Naprawa Tuple
     env = UnityVectorObservationWrapper(env)
 
-    # C. Shimmy (Stary Gym -> Nowy Gymnasium)
     print("   -> Aplikuję Shimmy...")
     env = GymV21CompatibilityV0(env=env)
 
-    # D. Monitor (Logowanie nagród)
     env = Monitor(env, log_dir)
 
-    # E. Normalizacja (A2C też tego potrzebuje!)
     env = DummyVecEnv([lambda: env])
     env = VecNormalize(env, norm_obs=True, norm_reward=True, clip_obs=10.)
 
@@ -84,22 +73,21 @@ def main():
         tensorboard_log=log_dir,
 
         # --- PARAMETRY A2C ---
-        learning_rate=0.0007,  # A2C lubi uczyć się szybciej niż DQN
-        n_steps=5,  # Aktualizuje mózg co 5 kroków (bardzo często!)
-        gamma=0.99,  # Dalekowzroczność
+        learning_rate=0.0007,
+        n_steps=5,
+        gamma=0.99,
         gae_lambda=1.0,
-        ent_coef=0.01,  # Entropia (Ciekawość) - żeby nie utknął w miejscu
-        vf_coef=0.5,  # Waga oceny sytuacji
+        ent_coef=0.01,
+        vf_coef=0.5,
         max_grad_norm=0.5,
         rms_prop_eps=1e-5,
-        use_rms_prop=True,  # Specyficzny optymalizator dla A2C
+        use_rms_prop=True,
         normalize_advantage=False
     )
 
     checkpoint_callback = CheckpointCallback(save_freq=10000, save_path=models_dir, name_prefix="a2c_model")
 
-    print("4. ROZPOCZYNAM TRENING (A2C)! 🚀")
-    # 200 000 kroków dla A2C to chwila moment
+    print("4. ROZPOCZYNAM TRENING (A2C)")
     model.learn(total_timesteps=300000, callback=checkpoint_callback)
 
     print("5. Zapisuję...")

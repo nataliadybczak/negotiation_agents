@@ -8,7 +8,6 @@ using System.Globalization;
 
 public enum StrategyType {RL, Egoist, Cooperative, Random};
 
-// To teraz zwykły MonoBehaviour - nie wymaga BehaviorParameters!
 public class NegotiationAgent : MonoBehaviour
 {
     private Rigidbody rb;
@@ -24,10 +23,9 @@ public class NegotiationAgent : MonoBehaviour
 
     private NegotiationAgent[] allAgentsCache;
 
-    private Vector3 targetPosition; // Gdzie agent ma iść
-    public float moveSpeed = 1.0f;  // Jak szybko ma tam płynąć (im mniej, tym wolniej)
+    private Vector3 targetPosition; 
+    public float moveSpeed = 1.0f;
     
-    // Teraz wszyscy są NegotiationAgent, więc typy pasują!
     public NegotiationAgent agent2;
     public NegotiationAgent agent3;
     [Header("Ustawienia Strategii")]
@@ -61,37 +59,34 @@ public class NegotiationAgent : MonoBehaviour
     public TradeIntention currentIntent = TradeIntention.None;
 
     [Header("Ograniczenia Handlu")]
-    public float tradeCooldownDuration = 2.0f; // 2 sekundy przerwy po handlu
+    public float tradeCooldownDuration = 2.0f;
     private float currentTradeCooldown = 0f;
 
     [Header("Stabilizacja Wizualna")]
-    public float minFlagTime = 0.5f; // Ile czasu flaga musi wisieć (pół sekundy)
-    private float flagTimer = 0f;    // Licznik czasu
+    public float minFlagTime = 0.5f; 
+    private float flagTimer = 0f;    
 
-    public GameObject iconFoodOffer;   // w Unity
+    public GameObject iconFoodOffer;   
     public GameObject iconEnergyOffer;
 
     [Header("Ustawienia Środowiska")]
     public float spawnRange = 12f;
 
-    // --- REFERENCJA DO TRENERA (Dla Jacka) ---
-    // Jeśli ten agent jest sterowany przez PPO/DQN, tutaj wpinamy "Mózg"
+
+    //jeśli ten agent jest sterowany przez PPO/DQN, tutaj wpinamy jemu mózg
     [HideInInspector] public JacekBrain myBrain; 
 
-    void Start() // Zamiast Initialize
+    void Start() 
     {
         rb = GetComponent<Rigidbody>();
         targetPosition = transform.localPosition;
 
-        // Zapiszemy plik na Pulpicie lub w folderze projektu
         logFilePath = "Log_" + gameObject.name + ".csv";
-        // Tworzymy nagłówek tabeli
         if (!File.Exists(logFilePath)) {
             File.WriteAllText(logFilePath, "Step,Food,Energy,Imbalance\n");
         }
     }
 
-    // Ta funkcja jest wywoływana przez MÓZG (JacekBrain) lub przez Skrypt (FixedUpdate)
     public void ProcessAction(int action)
     {
         if (flagTimer > 0)
@@ -117,10 +112,8 @@ public class NegotiationAgent : MonoBehaviour
                 break;
         }
 
-        // Aktualizacja wizualna (żebyś widziała, co myślą)
         UpdateVisuals();
 
-        // 2. PRÓBA HANDLU (Tylko jeśli chcemy handlować)
         if (currentIntent != TradeIntention.None)
         {
             TryExecuteHandshake();
@@ -138,11 +131,9 @@ public class NegotiationAgent : MonoBehaviour
             {
                 PerformTrade(partner);
                 
-                // Ustawiamy cooldown dla OBU stron
                 this.currentTradeCooldown = tradeCooldownDuration;
                 partner.currentTradeCooldown = tradeCooldownDuration;
                 
-                // Resetujemy intencje (opuszczamy flagi po udanym handlu)
                 this.currentIntent = TradeIntention.None;
                 partner.currentIntent = TradeIntention.None;
             }
@@ -157,7 +148,6 @@ public class NegotiationAgent : MonoBehaviour
             if (candidate == null) continue;
             if (candidate.currentIntent == TradeIntention.None) continue;
 
-            // Sprawdzamy, czy intencje się zgadzają
             if (this.currentIntent == TradeIntention.OfferFoodForEnergy && candidate.currentIntent == TradeIntention.OfferEnergyForFood)
             {
                 return candidate;
@@ -282,7 +272,7 @@ public class NegotiationAgent : MonoBehaviour
             
             stepCounter++;
 
-            //KROPKA (google Sheets)
+            //KROPKA (ma byc dla tych google Sheets)
             string sFood = food.ToString("F2", CultureInfo.InvariantCulture);
             string sEnergy = energy.ToString("F2", CultureInfo.InvariantCulture);
             string sImbalance = currentImbalance.ToString("F2", CultureInfo.InvariantCulture);
@@ -325,7 +315,6 @@ public class NegotiationAgent : MonoBehaviour
         }
     }
 
-    // --- LOGIKA POMOCNICZA---
     private int GetScriptedAction()
     {
         switch (currentStrategy)

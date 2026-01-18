@@ -3,10 +3,10 @@ using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    public NegotiationAgent[] agents; // lista agentów przypisana w Inspectorze
-    public TextMeshProUGUI totalText; // tekst do wyświetlania sumy
+    public NegotiationAgent[] agents;
+    public TextMeshProUGUI totalText; 
 
-    private float updateInterval = 1.0f; // co ile sekund aktualizować
+    private float updateInterval = 1.0f; 
     private float timer = 0f;
 
     void Update()
